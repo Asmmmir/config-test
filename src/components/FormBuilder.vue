@@ -15,7 +15,6 @@
             />
           </div>
         </div>
-        {{ formData }}
       </div>
 
       <button type="submit">Отправить</button>
