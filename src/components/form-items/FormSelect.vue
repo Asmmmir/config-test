@@ -7,7 +7,7 @@
         :key="option.value"
         :selected="option.selected"
         :value="option.value"
-      >{{ option.text }}</option>
+      >{{ option.text}}</option>
     </select>
   </div>
 </template>

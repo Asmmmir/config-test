@@ -1,7 +1,7 @@
 <template>
   <div>
     <label :for="name">{{ label }}</label>
-    <input v-bind="$attrs" v-model="inputValue" @input="removeSpaces" />
+    <input :value="modelValue" v-bind="$attrs" v-model.trim="inputValue" />
   </div>
 </template>
 
@@ -20,12 +20,6 @@ export default {
     return {
       inputValue: this.modelValue,
     };
-  },
-  methods: {
-    removeSpaces() {
-      this.inputValue = this.inputValue.replace(/\s+/g, "");
-      this.$emit("update:modelValue", this.inputValue);
-    },
   },
 };
 </script>

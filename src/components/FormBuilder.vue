@@ -1,16 +1,16 @@
 <template>
   <div class="form-builder">
-    <form class="form" @submit.prevent="onSubmit">
+    <form class="form" @submit.prevent="handleSubmit">
       <div class="form-config">
-        <div v-for="(formConfig, formIndex) in config">
+        <div v-for="(formConfig, formKey) in config">
           <h2>{{ formConfig.name }}</h2>
           <div v-for="field in formConfig.items">
             <component
               :label="field.label"
               :options="field.additional?.options"
               :is="components[field.type]"
-              :name="formIndex + field.name"
-              v-model="formData[formIndex][field.name]"
+              :name="`${formKey}.${field.name}`"
+              v-model="formData[formKey][field.name]"
             />
           </div>
         </div>
@@ -30,15 +30,6 @@ import FormRadio from "@/components/form-items/FormRadio.vue";
 import FormPassword from "@/components/form-items/FormPassword.vue";
 import { reactive } from "vue";
 
-function toResult(obj) {
-  return {
-    name: obj.name,
-    gender: obj.gender,
-    age: obj.age,
-    pass: obj.pass,
-  };
-}
-
 const components = {
   password: FormPassword,
   radio: FormRadio,
@@ -53,6 +44,10 @@ export default {
       type: Object,
       required: true,
     },
+    onSubmit: {
+      type: Function,
+      required: true,
+    },
   },
   components: {
     password: FormPassword,
@@ -63,39 +58,32 @@ export default {
 
   setup(props) {
     const formData = reactive({
-      parent: {
-        name: undefined,
-        gender: undefined,
-        age: undefined,
-        pass: undefined,
-      },
-      child: {
-        name: undefined,
-        gender: undefined,
-        age: undefined,
-        pass: undefined,
-      },
+      parent: {},
+      child: {},
     });
 
-    function validate(config) {
+    // Валидация 
+
+    function validate() {
       let isValid = true;
 
-      for (let [formKey, formValue] of Object.entries(config)) {
+      for (let [formKey, formValue] of Object.entries(props.config)) {
         formValue.items.forEach((field) => {
-          const fieldValue = formData[formKey][field.name]
-          const parentField = field.additional?.parent;
-          
+          const fieldValue = formData[formKey][field.name];
+
           if (!fieldValue) {
             isValid = false;
+            return;
           }
+
+          const parentField = field.additional?.parent;
 
           if (parentField) {
             const parentValue = formData[formKey][parentField];
 
-            console.log(parentValue, fieldValue);
-            
             if (fieldValue != parentValue) {
               isValid = false;
+              return;
             }
           }
         });
@@ -104,44 +92,54 @@ export default {
       return isValid;
     }
 
-    function onReset () {
-      for(const formKey in formData){
-        for(const formValue in formData[formKey]){
-          formData[formKey][formValue] = undefined
+    // Сброс 
+    
+    function onReset() {
+      for (const formKey in formData) {
+        for (const formValue in formData[formKey]) {
+          formData[formKey][formValue] = undefined;
         }
       }
     }
 
-    async function onSubmit() {
-      if (!validate(props.config)) {
-        alert("Ошибка в валидации");
+    // Подготовка к отправке 
+
+    function toResult(obj) {
+      const result = {};
+
+      for (const [formKey, formValue] of Object.entries(props.config)) {
+        result[formKey] = {};
+
+        formValue.items.forEach((field) => {
+          if (field.type === "password" && field.additional?.parent) {
+            return;
+          }
+
+          result[formKey][field.name] = obj[formKey][field.name];
+        });
+      }
+
+      return result;
+    }
+
+    //Отправка формы
+
+    function handleSubmit() {
+      if (!validate()) {
+        alert("Неверно введены поля!");
         return;
       }
 
-      try {
-        const response = await fetch("fakedata/api", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            parent: toResult(formData.parent),
-            child: toResult(formData.child),
-          }),
-        });
-        const result = await response.json();
-        console.log(result);
-      } catch (error) {
-        console.error("Ошибка в отправке формы:", error);
-      }
+      const preparedData = toResult(formData);
+      props.onSubmit(preparedData);
     }
 
     return {
       formData,
-      onSubmit,
       config: props.config,
       components,
-      onReset
+      onReset,
+      handleSubmit,
     };
   },
 };
