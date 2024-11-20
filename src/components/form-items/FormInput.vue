@@ -1,7 +1,7 @@
 <template>
   <div>
     <label :for="name">{{ label }}</label>
-    <input :value="modelValue" v-bind="$attrs" v-model.trim="inputValue" />
+    <input :id="id" :name="name" :value="modelValue" v-bind="$attrs" v-model.trim="inputValue" />
   </div>
 </template>
 
@@ -15,6 +15,7 @@ export default {
     },
     label: String,
     name: String,
+    id: String
   },
   data() {
     return {

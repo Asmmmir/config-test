@@ -7,6 +7,7 @@
           <div v-for="field in formConfig.items">
             <component
               :label="field.label"
+              :id="`${formKey}.${field.name}`"
               :options="field.additional?.options"
               :is="components[field.type]"
               :name="`${formKey}.${field.name}`"
@@ -28,7 +29,7 @@ import FormInput from "@/components/form-items/FormInput.vue";
 import FormSelect from "@/components/form-items/FormSelect.vue";
 import FormRadio from "@/components/form-items/FormRadio.vue";
 import FormPassword from "@/components/form-items/FormPassword.vue";
-import { reactive } from "vue";
+import { onBeforeMount, reactive } from "vue";
 
 const components = {
   password: FormPassword,
@@ -49,18 +50,20 @@ export default {
       required: true,
     },
   },
-  components: {
-    password: FormPassword,
-    radio: FormRadio,
-    select: FormSelect,
-    input: FormInput,
-  },
 
   setup(props) {
-    const formData = reactive({
-      parent: {},
-      child: {},
-    });
+    const formData = reactive({});
+
+
+    // Функция для инициализации formData 
+
+    function initializeForm () {
+      for(let formKey of Object.keys(props.config)){
+          formData[formKey] = {}
+
+      }
+    }
+
 
     // Валидация 
 
@@ -95,11 +98,9 @@ export default {
     // Сброс 
     
     function onReset() {
-      for (const formKey in formData) {
-        for (const formValue in formData[formKey]) {
-          formData[formKey][formValue] = undefined;
-        }
-      }
+      Object.keys(props.config).forEach((key) => {
+        formData[key] = {}
+      })
     }
 
     // Подготовка к отправке 
@@ -132,7 +133,10 @@ export default {
 
       const preparedData = toResult(formData);
       props.onSubmit(preparedData);
+      alert('Запрос успешно отправлен!')
     }
+
+    onBeforeMount(initializeForm)
 
     return {
       formData,
