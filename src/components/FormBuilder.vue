@@ -19,7 +19,7 @@
       </div>
 
       <button type="submit">Отправить</button>
-      <button @click="onReset" type="reset">Стереть</button>
+      <button @click="initializeForm" type="reset">Стереть</button>
     </form>
   </div>
 </template>
@@ -95,14 +95,6 @@ export default {
       return isValid;
     }
 
-    // Сброс 
-    
-    function onReset() {
-      Object.keys(props.config).forEach((key) => {
-        formData[key] = {}
-      })
-    }
-
     // Подготовка к отправке 
 
     function toResult(obj) {
@@ -142,8 +134,8 @@ export default {
       formData,
       config: props.config,
       components,
-      onReset,
       handleSubmit,
+      initializeForm
     };
   },
 };
